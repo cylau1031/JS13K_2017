@@ -1,4 +1,8 @@
 /* global kontra */
+var gameState = {
+  isPaused : false
+}
+
 kontra.init() 
 console.log(kontra)
 kontra.assets.imagePath = 'assets/images/'
@@ -99,8 +103,6 @@ kontra.assets.load('player.png')
           spawnWave();
         }
 
-        //pause or end game
-
 
         player.update()
         // memories.update()
@@ -113,9 +115,18 @@ kontra.assets.load('player.png')
       }
     })
 
-    kontra.keys.bind('p', () => {
-      loop.stop(); 
-    }) 
+    kontra.keys.bind('esc', () => {
+      if(!gameState.isPaused) {
+        gameState.isPaused = true; 
+        loop.stop(); 
+      } else {
+        gameState.isPaused = false; 
+        loop.start(); 
+      }
+    }); 
+    // kontra.keys.bind('enter', () => {
+    //   loop.start()
+    // }) 
 
     loop.start()
   })
