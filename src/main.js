@@ -1,6 +1,6 @@
 /* global kontra */
-kontra.init()
-//console.log(kontra)
+kontra.init() 
+console.log(kontra)
 kontra.assets.imagePath = 'assets/images/'
 kontra.assets.load('player.png')
   .then(() => {
@@ -9,7 +9,7 @@ kontra.assets.load('player.png')
       y: 10,
       image: kontra.assets.images.player,
       update: () => {
-        console.log('updating myself')
+        //console.log('updating myself')
       }
     })
     ///////////////////////////////////////
@@ -101,6 +101,7 @@ kontra.assets.load('player.png')
 
         //pause or end game
 
+
         player.update()
         // memories.update()
         // board.update()
@@ -112,7 +113,13 @@ kontra.assets.load('player.png')
       }
     })
 
+    kontra.keys.bind('p', () => {
+      loop.stop(); 
+    }) 
+
     loop.start()
   })
   .then(() => { })
   .catch(console.error)
+
+  
