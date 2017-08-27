@@ -5,10 +5,9 @@ var gameState = {
   isPaused : false
 }
 
-function getHypotenuse(position, center) {
-
-  var scale = 0.004; 
-  var random = Math.random() + .25; 
+function getDirection(position, center) {
+  var scale = 0.004; //scales it down so that memories move incremently instead of jumping to the center
+  var random = Math.random() + .25; //randomizes the scaling for mixed speeds 
   var direction =  { x: (center.x-position.x)*scale*random, y: (center.y - position.y)*scale*random}
   return direction; 
 }
@@ -128,6 +127,9 @@ kontra.assets.load('player.png', 'cloud.png')
       var CANVAS_CENTER = { x: MAX_WIDTH/2, y: MAX_HEIGHT/2 }; 
 
       for(var i=0; i<MAX_NUM_MEMORIES; i++) {
+        //toggle is used to determine which side of the board the memories will appear on
+        //Math.random is used to determine the toggle
+        //essentially '00'=>top, '01'=>bottom, '10'=>left, '11'=>right
         var toggle = '' + Math.round(Math.random()) + Math.round(Math.random());
         var position; 
         if(toggle === '00') position = { x: Math.random() * MAX_WIDTH, y: 0}
@@ -135,7 +137,7 @@ kontra.assets.load('player.png', 'cloud.png')
         else if(toggle === '10') position = { x: 0, y: Math.random() * MAX_WIDTH }
         else if(toggle === '11') position = { x: MAX_WIDTH, y: Math.random() * MAX_HEIGHT}
         else position = { x: 0, y: 0}   
-        var direction = getHypotenuse(position, CANVAS_CENTER); 
+        var direction = getDirection(position, CANVAS_CENTER); 
         memories.get({
           x: position.x, 
           y: position.y, 
