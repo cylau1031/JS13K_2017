@@ -3,7 +3,7 @@ body {
 }
 
 canvas {
-  background-color: blue;
+  background-color: black;
   display: block;
   margin: auto
 }
