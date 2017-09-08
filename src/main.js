@@ -82,6 +82,16 @@ kontra.assets.load('player.png', 'cloud.png')
       }
     })
 
+    let lifeKeeper = kontra.sprite({
+      livesLeft: 3,
+      x: 550,
+      y: 100,
+      render: function() {
+        this.context.font = '25px Arial'
+        this.context.fillText(`Lives left: ${this.livesLeft}`, this.x, this.y)
+      }
+    })
+
     ///////////////////////////////////////
     //////////////MEMORIES/////////////////
     ///////////////////////////////////////
@@ -225,12 +235,13 @@ kontra.assets.load('player.png', 'cloud.png')
       } else if (collidingCircles(memoryObj, circleObj) ) {
         console.log('missed it :( ');
         pointKeeper.points -= 1
+        lifeKeeper.livesLeft -= 1
         memoryObj.ttl = 0
       }
 
     }
     const checkPoints = function(memoryObj) {
-      if( pointKeeper.points < 0 ) {
+      if( pointKeeper.points < 0 || lifeKeeper.livesLeft === 0 ) {
         console.log('you died x_x')
         //memoryObj.ttl = 0
         gameState.isPaused = true;
@@ -254,6 +265,7 @@ kontra.assets.load('player.png', 'cloud.png')
         circle.update()
         arc.update()
         pointKeeper.update()
+        lifeKeeper.update()
 
         //keypress logic
 
@@ -272,6 +284,7 @@ kontra.assets.load('player.png', 'cloud.png')
         circle.render()
         arc.render()
         pointKeeper.render()
+        lifeKeeper.render()
         // board.render()
       }
     })
