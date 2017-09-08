@@ -50,14 +50,14 @@ kontra.assets.load('player.png', 'cloud.png')
       color: 'white',
       radius: 110,
       lineWidth: 6,
-      startAngle: 0,
+      startAngle: (Math.PI * 2),
       angleLength: (Math.PI * 2)/15,
       update: function() {
         if (kontra.keys.pressed('left')) {
-          this.startAngle += (Math.PI * 2)/180
+          this.startAngle += (Math.PI)/180
         }
         if (kontra.keys.pressed('right')) {
-          this.startAngle -= (Math.PI * 2)/180
+          this.startAngle -= (Math.PI)/180
         }
       },
       render: function() {
@@ -161,7 +161,8 @@ kontra.assets.load('player.png', 'cloud.png')
       var MAX_WIDTH = kontra.canvas.width-20;
       var CANVAS_CENTER = { x: MAX_WIDTH/2, y: MAX_HEIGHT/2 };
 
-      for(var i=0; i<MAX_NUM_MEMORIES; i++) {
+      //for(var i=0; i<MAX_NUM_MEMORIES; i++) {
+      for(var i=0; i<1; i++) {
         //toggle is used to determine which side of the board the memories will appear on
         //Math.random is used to determine the toggle
         //essentially '00'=>top, '01'=>bottom, '10'=>left, '11'=>right
@@ -179,18 +180,52 @@ kontra.assets.load('player.png', 'cloud.png')
           dx: direction.x,
           dy: direction.y,
           color: 'blue',
-          width: 20,
-          height: 20,
+          radius: 20,
+          //width: 20,
+          //height: 20,
           ttl: Infinity,
           speed: 0,
           type: 'enemy',
           update: function() {
-            this.advance();
+            collidingWithArc(this, arc, circle)
+            this.advance()
+          },
+          render: function() {
+            this.context.fillStyle = this.color
+            this.context.beginPath()
+            this.context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI)
+            this.context.fill()
           }
         });
       }
     }
+    const collidingCircles = function(memoryObj, circleObj) {
+      let dx = memoryObj.x - circleObj.x
+      let dy = memoryObj.y - circleObj.y
+      let distance = Math.sqrt( dx * dx + dy * dy)
 
+      if (distance < memoryObj.radius + circleObj.radius) {
+        return true
+      }
+      return false
+    }
+    const collidingWithArc = function(memoryObj, arcObj, circleObj) {
+      const dx = memoryObj.x - circleObj.x
+      const dy = memoryObj.y - circleObj.y
+      let angle = Math.atan2(dy, dx)
+     // let angleRange = Math.atan(memoryObj.radius / (Math.sqrt(memoryObj.x * memoryObj.x + memoryObj.y * memoryObj.y)))
+      const arcStartAngle = arcObj.startAngle % (2 * Math.PI)
+
+      if (angle < 0) { angle = (Math.PI * 2) + angle }
+      if (collidingCircles(memoryObj, arcObj) && angle > arcStartAngle && angle < (arcStartAngle + arcObj.angleLength)) {
+        pointKeeper.points += 1
+        memoryObj.ttl = 0
+
+      } else if (collidingCircles(memoryObj, circleObj)) {
+        alert('missed it :( ')
+      }
+
+    }
 
     //let board = kontra.sprite({})
 
