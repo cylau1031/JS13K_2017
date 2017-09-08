@@ -221,8 +221,10 @@ kontra.assets.load('player.png', 'cloud.png')
         pointKeeper.points += 1
         memoryObj.ttl = 0
 
-      } else if (collidingCircles(memoryObj, circleObj)) {
-        alert('missed it :( ')
+      } else if (collidingCircles(memoryObj, circleObj) ) {
+        console.log('missed it :( ');
+        pointKeeper.points -= 1
+        memoryObj.ttl = 0
       }
 
     }
@@ -278,4 +280,3 @@ kontra.assets.load('player.png', 'cloud.png')
   })
   .then(() => { })
   .catch(console.error)
-
