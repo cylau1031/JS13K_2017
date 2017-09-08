@@ -188,6 +188,7 @@ kontra.assets.load('player.png', 'cloud.png')
           type: 'enemy',
           update: function() {
             collidingWithArc(this, arc, circle)
+            checkPoints(this);
             this.advance()
           },
           render: function() {
@@ -227,6 +228,18 @@ kontra.assets.load('player.png', 'cloud.png')
         memoryObj.ttl = 0
       }
 
+    }
+    const checkPoints = function(memoryObj) {
+      if( pointKeeper.points < 0 ) {
+        console.log('you died x_x')
+        //memoryObj.ttl = 0
+        gameState.isPaused = true;
+        loop.stop();
+      } else {
+        /*
+        do nothing, keep the game running
+        */
+      }
     }
 
     //let board = kontra.sprite({})
