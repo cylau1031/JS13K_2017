@@ -1,8 +1,29 @@
 /* global kontra */
-const MAX_NUM_MEMORIES = 10;
+const canvas = document.getElementById('game')
+const ctx =  canvas.getContext('2d')
 
-var gameState = {
-  isPaused : false
+const MAX_NUM_MEMORIES = 10;
+const levels = {
+  sceneText: {
+    1: ['"...family?"', '"...accident"', '"...lost..."'],
+    2: ['"...ok?"', '"...comatose"', '"...monitoring..."'],
+    3: ['"condition not..."', '"...last the night"', '"come back..."'],
+    4: ['"...stabilizing"', '"we love you..."'],
+    5: ['"See that...finger twitch!"', '"...GET THE DOCTOR!"', '"Don\'t give up..."']
+  },
+  win: {
+    sceneText: 'Welcome back.'
+  },
+  lose: {
+  //flatline, play button
+    //consider line pulse image
+  }
+}
+
+let gameState = {
+  isPaused : false,
+  level: 1,
+  islevelTransition: true
 }
 
 function getDirection(position, center) {
@@ -13,28 +34,20 @@ function getDirection(position, center) {
 }
 
 
-
-kontra.init()
-console.log(kontra)
+kontra.init(canvas)
 kontra.assets.imagePath = 'assets/images/'
 kontra.assets.load('player.png', 'cloud.png')
   .then(() => {
+
+    const canvasDetails = {
+      lightness: 0
+    }
     const canvasHeight = kontra.canvas.height;
     const canvasWidth = kontra.canvas.width;
-
-    //I ADDED A CLOUD FOR NO REASON... just playing around
-    //DONT MIND THIS CLOUD lol -pat
-
-    let cloud = kontra.sprite({
-      x: canvasWidth/4,
-      y: canvasHeight/4,
-      image: kontra.assets.images.cloud
-    })
-
     let circle = kontra.sprite({
       x: 400,
       y: 300,
-      color: 'red',
+      color: 'white',
       radius: 100,
       render: function() {
         this.context.fillStyle = this.color
@@ -54,10 +67,10 @@ kontra.assets.load('player.png', 'cloud.png')
       angleLength: (Math.PI * 2)/15,
       update: function() {
         if (kontra.keys.pressed('left')) {
-          this.startAngle += (Math.PI)/180
+          this.startAngle += (Math.PI / 180) * 3
         }
         if (kontra.keys.pressed('right')) {
-          this.startAngle -= (Math.PI)/180
+          this.startAngle -= (Math.PI / 180) * 3
         }
       },
       render: function() {
@@ -77,79 +90,34 @@ kontra.assets.load('player.png', 'cloud.png')
         //if there was a collision then add points
       },
       render: function() {
+        this.context.beginPath()
         this.context.font = '30px Arial'
         this.context.fillText(`${this.points}`, this.x, this.y)
+      }
+    })
+
+    let scene = kontra.sprite({
+      x: 200,
+      y: 200,
+      update: function() {
+      },
+      render: function() {
+        this.context.beginPath()
+        this.context.font = '30px Arial'
+        this.context.fillStyle = 'white'
+        this.context.beginPath()
+        let textSpace = {x: this.x, y: this.y}
+        for (let i = 0; i < levels.sceneText[gameState.level].length; i++) {
+          this.context.fillText(`${levels.sceneText[gameState.level][i]}`, textSpace.x + (i * 100), textSpace.y + (i * 100))
+        }
+        this.context.font = '15px Arial'
+        this.context.fillText('Press space to continue.', 600, 575)
       }
     })
 
     ///////////////////////////////////////
     //////////////MEMORIES/////////////////
     ///////////////////////////////////////
-
-    // const maxNumMemories = 10;
-    // var memories = kontra.pool({
-    //   create: kontra.sprite,
-    //   maxSize: maxNumMemories
-    // });
-
-    /**
-     * Spawn a new wave of memories in random
-     * positions around the map, all will move
-     * towards center
-     */
-    //calculate dx, dy to travel to center
-
-    // function calculateDx(xStart) {
-    //   return ((-2 * xStart + canvasWidth) / canvasWidth);
-    // }
-
-    // function calculateDy(yStart) {
-    //   return ((-2 * yStart + canvasHeight) / canvasHeight);
-    // }
-    // function spawnWave() {
-    //   //todo: randomize start pos
-    //   var xStart = 0;
-    //   var yStart = 0;
-      // var spacer = y * 1.5;
-
-    //   for (var i = 1; i <= maxNumMemories; i++) {
-    //     xStart += i * 100;
-    //     yStart += i * 100;
-    //     memories.get({
-    //       x: xStart,
-    //       y: yStart,
-    //       dx: calculateDx(xStart),
-    //       dy: calculateDy(yStart) ,
-    //       color: 'red',  // fill color of the sprite rectangle
-    //       width: 20,     // width and height of the sprite rectangle
-    //       height: 20,
-    //       // image: kontra.assets.images.enemy,
-    //       ttl: Infinity,
-    //       //???
-    //       // leftEdge: x - 90,
-    //       // rightEdge: x + 90 + width,
-    //       // bottomEdge: y + 140,
-    //       speed: 2,
-    //       type: 'enemy',
-    //       update: function () {
-    //         this.advance();
-
-    //         // change enemy velocity to move back and forth
-    //         // if (this.x <= this.leftEdge) {
-    //         //   this.dx = this.speed;
-    //         // }
-    //         // else if (this.x >= this.rightEdge) {
-    //         //   this.dx = -this.speed;
-    //         // }
-    //         // else if (this.y >= this.bottomEdge) {
-    //         //   this.dy = 0;
-    //         //   this.dx = -this.speed;
-    //         //   this.y -= 5;
-    //         // }
-    //       },
-    //     });
-    //   }
-    // }
 
     const memories = kontra.pool({
       create: kontra.sprite,
@@ -181,13 +149,14 @@ kontra.assets.load('player.png', 'cloud.png')
           dy: direction.y,
           color: 'blue',
           radius: 20,
-          //width: 20,
-          //height: 20,
           ttl: Infinity,
           speed: 0,
           type: 'enemy',
           update: function() {
             collidingWithArc(this, arc, circle)
+            if(this.x < -20 || this.x > 820 || this.y < -20 || this.y > 620) {
+              this.ttl = 0
+            }
             this.advance()
           },
           render: function() {
@@ -213,57 +182,53 @@ kontra.assets.load('player.png', 'cloud.png')
       const dx = memoryObj.x - circleObj.x
       const dy = memoryObj.y - circleObj.y
       let angle = Math.atan2(dy, dx)
-     // let angleRange = Math.atan(memoryObj.radius / (Math.sqrt(memoryObj.x * memoryObj.x + memoryObj.y * memoryObj.y)))
+
       const arcStartAngle = arcObj.startAngle % (2 * Math.PI)
 
       if (angle < 0) { angle = (Math.PI * 2) + angle }
       if (collidingCircles(memoryObj, arcObj) && angle > arcStartAngle && angle < (arcStartAngle + arcObj.angleLength)) {
         pointKeeper.points += 1
         memoryObj.ttl = 0
-
+        canvasDetails.lightness += 5
+        canvas.style.backgroundColor = `hsl(0, 0%, ${canvasDetails.lightness}%`
+        gameState.level += 1
+        gameState.islevelTransition = true
       } else if (collidingCircles(memoryObj, circleObj)) {
-        alert('missed it :( ')
+        //console.log('missed')
       }
 
     }
 
-    //let board = kontra.sprite({})
-
     let loop = kontra.gameLoop({
 
       update: () => {
-        memories.update();
-        if (memories.getAliveObjects().length === 0) {
-          spawnMemories();
+        if (!gameState.islevelTransition) {
+          memories.update();
+          if (memories.getAliveObjects().length === 0) {
+            spawnMemories();
+          }
+          circle.update()
+          arc.update()
+          pointKeeper.update()
+        } else {
+          scene.update()
         }
-        circle.update()
-        arc.update()
-        pointKeeper.update()
-
-        //keypress logic
-
-        //collision logic
-
-        ///////////////////////////////////////
-        //////////////MEMORIES/////////////////
-        ///////////////////////////////////////
-        // memories.update()
-        // board.update()
       },
       render: () => {
-       //player.render()
-        //cloud.render()
-        memories.render()
-        circle.render()
-        arc.render()
-        pointKeeper.render()
-        // board.render()
+        if (!gameState.islevelTransition) {
+          memories.render()
+          circle.render()
+          arc.render()
+          pointKeeper.render()
+        } else {
+          scene.render()
+        }
       }
     })
 
     //keypress logic to pause and unpause the game
     kontra.keys.bind('esc', () => {
-      if(!gameState.isPaused) {
+      if (!gameState.isPaused) {
         gameState.isPaused = true;
         loop.stop();
       } else {
@@ -271,8 +236,9 @@ kontra.assets.load('player.png', 'cloud.png')
         loop.start();
       }
     });
-
-
+    kontra.keys.bind('space', () => {
+      gameState.islevelTransition = !gameState.islevelTransition
+    });
 
     loop.start()
   })
