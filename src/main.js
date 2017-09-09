@@ -118,6 +118,10 @@ kontra.assets.load('player.png', 'cloud.png')
           this.context.font = 'italic 15px Arial'
           this.context.fillStyle = 'grey'
           this.context.fillText('Press space to continue.', 320, 575)
+        } else if (gameState.level === 'lose') {
+          this.context.font = 'italic 50px Arial'
+          this.context.fillStyle = 'white'
+          this.context.fillText(scenes[lose].text, 250, 300)
         } else {
           let textSpace = {x: this.x, y: this.y}
           for (let i = 0; i < scenes.sceneText[gameState.level].length; i++) {
@@ -204,11 +208,10 @@ kontra.assets.load('player.png', 'cloud.png')
         memoryObj.ttl = 0
         canvas.lightness += 5
         kontra.canvas.style.backgroundColor = `hsl(0, 0%, ${canvas.lightness}%`
-        gameState.level += 1
-        gameState.islevelTransition = true
+
+
       } else if (collidingCircles(memoryObj, circleObj)) {
         pointKeeper.points -= 1
-
         if (pointKeeper.points < 0) {
           lifeKeeper.livesLeft -= 1
           pointKeeper.points = 0
@@ -220,14 +223,18 @@ kontra.assets.load('player.png', 'cloud.png')
 
     const checkPoints = function(memoryObj) {
       if ( pointKeeper.points < 0 || lifeKeeper.livesLeft === 0 ) {
-        console.log('you died x_x')
+        gameState.islevelTransition = true
+        gameState.level = 'lose'
         //memoryObj.ttl = 0
         gameState.isPaused = true;
         loop.stop();
+      } else if (pointKeeper.points >= 3) {
+        //changing winning points to 5-10
+        pointKeeper.points = 0
+        gameState.level += 1
+        gameState.islevelTransition = true
       } else {
-        /*
-        do nothing, keep the game running
-        */
+        //keep game running
       }
     }
 
