@@ -220,6 +220,18 @@ kontra.assets.load('player.png', 'cloud.png')
       }
 
     }
+    const checkPoints = function(memoryObj) {
+      if( pointKeeper.points < 0 || lifeKeeper.livesLeft === 0 ) {
+        console.log('you died x_x')
+        //memoryObj.ttl = 0
+        gameState.isPaused = true;
+        loop.stop();
+      } else {
+        /*
+        do nothing, keep the game running
+        */
+      }
+    }
 
     const checkPoints = function(memoryObj) {
       if ( pointKeeper.points < 0 || lifeKeeper.livesLeft === 0 ) {
@@ -287,4 +299,3 @@ kontra.assets.load('player.png', 'cloud.png')
   })
   .then(() => { })
   .catch(console.error)
-
