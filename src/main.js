@@ -29,7 +29,8 @@ kontra.assets.load('player.png', 'cloud.png')
     let gameState = {
       isPaused: false,
       level: 0,
-      islevelTransition: true
+      islevelTransition: true,
+      completedLevel: false
     }
 
     const canvas = {
@@ -103,7 +104,7 @@ kontra.assets.load('player.png', 'cloud.png')
     }
     const titleSceneDraw = function(ctx, text) {
       ctx.font = '50px Arial'
-      ctx.fillStyle = 'white'
+      ctx.fillStyle = 'grey'
       ctx.fillText(text, 250, 300)
     }
     let scene = kontra.sprite({
@@ -134,7 +135,6 @@ kontra.assets.load('player.png', 'cloud.png')
     })
 
 
-
     const collidingCircles = function(memoryObj, circleObj) {
       const dx = memoryObj.x - circleObj.x
       const dy = memoryObj.y - circleObj.y
@@ -157,13 +157,14 @@ kontra.assets.load('player.png', 'cloud.png')
         gameState.level = 'lose'
         //gameState.isPaused = true;
         //loop.stop();
-      } else if (pointKeeper.points >= 1) {
+      } else if (pointKeeper.points >= 2) {
         //changing winning points to 5-10
         pointKeeper.points = 0
         if (gameState.level === 5) {
           gameState.level = 'win'
         } else {
           gameState.level += 1
+          //gameState.completedLevel = true
         }
         gameState.islevelTransition = true
       } else {
@@ -292,6 +293,11 @@ kontra.assets.load('player.png', 'cloud.png')
         if (gameState.level === 'win' || gameState.level === 'lose') {
           restartGame()
         }
+      } else {
+        // if (gameState.completedLevel) {
+        //   gameState.completedLevel = false
+        //   gameState.islevelTransition = true
+        // }
       }
     });
 
