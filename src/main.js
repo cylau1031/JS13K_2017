@@ -1,14 +1,12 @@
 /* global kontra */
 
 const scenes = {
-  0: {
-    text: 'CONSCIOUS'
-  },
   sceneText: {
+    0: 'CONSCIOUS',
     1: ['"...family?"', '"...accident"', '"...lost..."'],
     2: ['"...ok?"', '"...comatose"', '"...monitoring..."'],
     3: ['"condition not..."', '"...last the night?"', '"come back..."'],
-    4: ['"...stabilizing"', '"we love you..."'],
+    4: ['"...stabilizing"', '"we love you..."', '"can...hear us?"'],
     5: ['"See that...finger twitch!"', '"...GET THE DOCTOR!"', '"Don\'t give up..."'],
     win: 'Welcome back',
     lose:  'You died x_x'
@@ -36,8 +34,8 @@ kontra.assets.load('player.png', 'cloud.png')
 
     const canvas = {
       lightness: 0,
-      MAX_NUM_MEMORIES: 10,
-      }
+      MAX_NUM_MEMORIES: 5,
+    }
 
     let circle = kontra.sprite({
       x: 400,
@@ -81,9 +79,6 @@ kontra.assets.load('player.png', 'cloud.png')
       points: 0,
       x: 100,
       y: 100,
-      update: function() {
-        //if there was a collision then add points
-      },
       render: function() {
         this.context.beginPath()
         this.context.font = '30px Arial'
@@ -101,38 +96,80 @@ kontra.assets.load('player.png', 'cloud.png')
       }
     })
 
+    const spaceDraw = function (ctx, actionText) {
+      ctx.font = 'italic 15px Arial'
+      ctx.fillStyle = 'grey'
+      ctx.fillText(`Press space to ${actionText}.`, 320, 575)
+    }
+    const titleSceneDraw = function(ctx, text) {
+      ctx.font = '50px Arial'
+      ctx.fillStyle = 'white'
+      ctx.fillText(text, 250, 300)
+    }
     let scene = kontra.sprite({
       x: 200,
       y: 200,
-      update: function() {
-      },
       render: function() {
         this.context.beginPath()
         this.context.font = '30px Arial'
         this.context.fillStyle = 'white'
         this.context.beginPath()
         if (gameState.level === 0) {
-          this.context.font = 'italic 50px Arial'
-          this.context.fillStyle = 'white'
-          this.context.fillText(scenes[0].text, 250, 300)
-          this.context.font = 'italic 15px Arial'
-          this.context.fillStyle = 'grey'
-          this.context.fillText('Press space to continue.', 320, 575)
+          titleSceneDraw(this.context, scenes.sceneText[0])
+          spaceDraw(this.context, 'continue')
         } else if (gameState.level === 'lose') {
-          this.context.font = 'italic 50px Arial'
-          this.context.fillStyle = 'white'
-          this.context.fillText(scenes[lose].text, 250, 300)
+          titleSceneDraw(this.context, scenes.sceneText.lose)
+          spaceDraw(this.context, 'restart')
+        } else if (gameState.level === 'win'){
+          titleSceneDraw(this.context, scenes.sceneText.win)
+          spaceDraw(this.context, 'play again')
         } else {
           let textSpace = {x: this.x, y: this.y}
           for (let i = 0; i < scenes.sceneText[gameState.level].length; i++) {
             this.context.fillText(`${scenes.sceneText[gameState.level][i]}`, textSpace.x + (i * 100), textSpace.y + (i * 100))
           }
-          this.context.font = 'italic 15px Arial'
-          this.context.fillStyle = 'grey'
-          this.context.fillText('Press space to continue.', 600, 575)
+          spaceDraw(this.context, 'continue')
         }
       }
     })
+
+
+
+    const collidingCircles = function(memoryObj, circleObj) {
+      const dx = memoryObj.x - circleObj.x
+      const dy = memoryObj.y - circleObj.y
+      const distance = Math.sqrt( dx * dx + dy * dy)
+      return distance < memoryObj.radius + circleObj.radius
+    }
+
+    const collidingWithArc = function(memoryObj) {
+      const dx = memoryObj.x - circle.x
+      const dy = memoryObj.y - circle.y
+      let angle = Math.atan2(dy, dx)
+      const arcStartAngle = arc.startAngle % (2 * Math.PI)
+      if (angle < 0) angle = (Math.PI * 2) + angle
+      return collidingCircles(memoryObj, arc) && angle > arcStartAngle && angle < (arcStartAngle + arc.angleLength)
+    }
+
+    const checkPoints = function() {
+      if (pointKeeper.points < 0 || lifeKeeper.livesLeft === 0 ) {
+        gameState.islevelTransition = true
+        gameState.level = 'lose'
+        //gameState.isPaused = true;
+        //loop.stop();
+      } else if (pointKeeper.points >= 1) {
+        //changing winning points to 5-10
+        pointKeeper.points = 0
+        if (gameState.level === 5) {
+          gameState.level = 'win'
+        } else {
+          gameState.level += 1
+        }
+        gameState.islevelTransition = true
+      } else {
+        //keep game running
+      }
+    }
 
     ///////////////////////////////////////
     //////////////MEMORIES/////////////////
@@ -160,7 +197,9 @@ kontra.assets.load('player.png', 'cloud.png')
         else if(toggle === '10') position = { x: 0, y: Math.random() * MAX_WIDTH }
         else if(toggle === '11') position = { x: MAX_WIDTH, y: Math.random() * MAX_HEIGHT}
         else position = { x: 0, y: 0}
+
         var direction = getDirection(position, CANVAS_CENTER);
+
         memories.get({
           x: position.x,
           y: position.y,
@@ -172,11 +211,21 @@ kontra.assets.load('player.png', 'cloud.png')
           speed: 0,
           type: 'enemy',
           update: function() {
-            collidingWithArc(this, arc, circle)
-            if(this.x < -20 || this.x > 820 || this.y < -20 || this.y > 620) {
+            if (collidingWithArc(this)) {
+              this.ttl = 0
+              canvas.lightness += 5
+              kontra.canvas.style.backgroundColor = `hsl(0, 0%, ${canvas.lightness}%`
+              pointKeeper.points += 1
+              checkPoints()
+            } else if (collidingCircles(this, circle)) {
+              pointKeeper.points -= 1
+              if (pointKeeper.points < 0) {
+                lifeKeeper.livesLeft -= 1
+                pointKeeper.points = 0
+              }
               this.ttl = 0
             }
-            checkPoints(this);
+            checkPoints();
             this.advance()
           },
           render: function() {
@@ -188,66 +237,10 @@ kontra.assets.load('player.png', 'cloud.png')
         });
       }
     }
-    const collidingCircles = function(memoryObj, circleObj) {
-      let dx = memoryObj.x - circleObj.x
-      let dy = memoryObj.y - circleObj.y
-      let distance = Math.sqrt( dx * dx + dy * dy)
-      return distance < memoryObj.radius + circleObj.radius
-    }
 
-    const collidingWithArc = function(memoryObj, arcObj, circleObj) {
-      const dx = memoryObj.x - circleObj.x
-      const dy = memoryObj.y - circleObj.y
-      let angle = Math.atan2(dy, dx)
-
-      const arcStartAngle = arcObj.startAngle % (2 * Math.PI)
-
-      if (angle < 0) { angle = (Math.PI * 2) + angle }
-      if (collidingCircles(memoryObj, arcObj) && angle > arcStartAngle && angle < (arcStartAngle + arcObj.angleLength)) {
-        pointKeeper.points += 1
-        memoryObj.ttl = 0
-        canvas.lightness += 5
-        kontra.canvas.style.backgroundColor = `hsl(0, 0%, ${canvas.lightness}%`
-
-
-      } else if (collidingCircles(memoryObj, circleObj)) {
-        pointKeeper.points -= 1
-        if (pointKeeper.points < 0) {
-          lifeKeeper.livesLeft -= 1
-          pointKeeper.points = 0
-        }
-        memoryObj.ttl = 0
-      }
-
-    }
-    const checkPoints = function(memoryObj) {
-      if( pointKeeper.points < 0 || lifeKeeper.livesLeft === 0 ) {
-        console.log('you died x_x')
-        //memoryObj.ttl = 0
-        gameState.isPaused = true;
-        loop.stop();
-      } else {
-        /*
-        do nothing, keep the game running
-        */
-      }
-    }
-
-    const checkPoints = function(memoryObj) {
-      if ( pointKeeper.points < 0 || lifeKeeper.livesLeft === 0 ) {
-        gameState.islevelTransition = true
-        gameState.level = 'lose'
-        //memoryObj.ttl = 0
-        gameState.isPaused = true;
-        loop.stop();
-      } else if (pointKeeper.points >= 3) {
-        //changing winning points to 5-10
-        pointKeeper.points = 0
-        gameState.level += 1
-        gameState.islevelTransition = true
-      } else {
-        //keep game running
-      }
+    const restartGame = function () {
+      gameState.level = 0
+      gameState.islevelTransition = true
     }
 
     let loop = kontra.gameLoop({
@@ -291,7 +284,14 @@ kontra.assets.load('player.png', 'cloud.png')
     });
     kontra.keys.bind('space', () => {
       if (gameState.islevelTransition) {
-        gameState.islevelTransition = false
+        if (gameState.level === 0) {
+          gameState.level += 1
+        } else {
+          gameState.islevelTransition = false
+        }
+        if (gameState.level === 'win' || gameState.level === 'lose') {
+          restartGame()
+        }
       }
     });
 
