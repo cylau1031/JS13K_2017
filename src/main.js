@@ -1,30 +1,20 @@
 /* global kontra */
-const canvas = document.getElementById('game')
-const ctx =  canvas.getContext('2d')
 
-const MAX_NUM_MEMORIES = 10;
-const levels = {
+const scenes = {
+  0: {
+    text: 'CONSCIOUS'
+  },
   sceneText: {
     1: ['"...family?"', '"...accident"', '"...lost..."'],
     2: ['"...ok?"', '"...comatose"', '"...monitoring..."'],
-    3: ['"condition not..."', '"...last the night"', '"come back..."'],
+    3: ['"condition not..."', '"...last the night?"', '"come back..."'],
     4: ['"...stabilizing"', '"we love you..."'],
-    5: ['"See that...finger twitch!"', '"...GET THE DOCTOR!"', '"Don\'t give up..."']
-  },
-  win: {
-    sceneText: 'Welcome back.'
-  },
-  lose: {
-  //flatline, play button
-    //consider line pulse image
+    5: ['"See that...finger twitch!"', '"...GET THE DOCTOR!"', '"Don\'t give up..."'],
+    win: 'Welcome back',
+    lose:  'You died x_x'
   }
 }
 
-let gameState = {
-  isPaused : false,
-  level: 1,
-  islevelTransition: true
-}
 
 function getDirection(position, center) {
   var scale = 0.004; //scales it down so that memories move incremently instead of jumping to the center
@@ -34,16 +24,21 @@ function getDirection(position, center) {
 }
 
 
-kontra.init(canvas)
+kontra.init()
 kontra.assets.imagePath = 'assets/images/'
 kontra.assets.load('player.png', 'cloud.png')
   .then(() => {
-
-    const canvasDetails = {
-      lightness: 0
+    let gameState = {
+      isPaused: false,
+      level: 0,
+      islevelTransition: true
     }
-    const canvasHeight = kontra.canvas.height;
-    const canvasWidth = kontra.canvas.width;
+
+    const canvas = {
+      lightness: 0,
+      MAX_NUM_MEMORIES: 10,
+      }
+
     let circle = kontra.sprite({
       x: 400,
       y: 300,
@@ -96,6 +91,16 @@ kontra.assets.load('player.png', 'cloud.png')
       }
     })
 
+    let lifeKeeper = kontra.sprite({
+      livesLeft: 3,
+      x: 550,
+      y: 100,
+      render: function() {
+        this.context.font = '25px Arial'
+        this.context.fillText(`Lives left: ${this.livesLeft}`, this.x, this.y)
+      }
+    })
+
     let scene = kontra.sprite({
       x: 200,
       y: 200,
@@ -106,12 +111,22 @@ kontra.assets.load('player.png', 'cloud.png')
         this.context.font = '30px Arial'
         this.context.fillStyle = 'white'
         this.context.beginPath()
-        let textSpace = {x: this.x, y: this.y}
-        for (let i = 0; i < levels.sceneText[gameState.level].length; i++) {
-          this.context.fillText(`${levels.sceneText[gameState.level][i]}`, textSpace.x + (i * 100), textSpace.y + (i * 100))
+        if (gameState.level === 0) {
+          this.context.font = 'italic 50px Arial'
+          this.context.fillStyle = 'white'
+          this.context.fillText(scenes[0].text, 250, 300)
+          this.context.font = 'italic 15px Arial'
+          this.context.fillStyle = 'grey'
+          this.context.fillText('Press space to continue.', 320, 575)
+        } else {
+          let textSpace = {x: this.x, y: this.y}
+          for (let i = 0; i < scenes.sceneText[gameState.level].length; i++) {
+            this.context.fillText(`${scenes.sceneText[gameState.level][i]}`, textSpace.x + (i * 100), textSpace.y + (i * 100))
+          }
+          this.context.font = 'italic 15px Arial'
+          this.context.fillStyle = 'grey'
+          this.context.fillText('Press space to continue.', 600, 575)
         }
-        this.context.font = '15px Arial'
-        this.context.fillText('Press space to continue.', 600, 575)
       }
     })
 
@@ -121,7 +136,7 @@ kontra.assets.load('player.png', 'cloud.png')
 
     const memories = kontra.pool({
       create: kontra.sprite,
-      maxSize: MAX_NUM_MEMORIES
+      maxSize: canvas.MAX_NUM_MEMORIES
     });
 
     function spawnMemories() {
@@ -129,7 +144,7 @@ kontra.assets.load('player.png', 'cloud.png')
       var MAX_WIDTH = kontra.canvas.width-20;
       var CANVAS_CENTER = { x: MAX_WIDTH/2, y: MAX_HEIGHT/2 };
 
-      //for(var i=0; i<MAX_NUM_MEMORIES; i++) {
+      //for(var i=0; i< canvas.MAX_NUM_MEMORIES; i++) {
       for(var i=0; i<1; i++) {
         //toggle is used to determine which side of the board the memories will appear on
         //Math.random is used to determine the toggle
@@ -157,6 +172,7 @@ kontra.assets.load('player.png', 'cloud.png')
             if(this.x < -20 || this.x > 820 || this.y < -20 || this.y > 620) {
               this.ttl = 0
             }
+            checkPoints(this);
             this.advance()
           },
           render: function() {
@@ -172,12 +188,9 @@ kontra.assets.load('player.png', 'cloud.png')
       let dx = memoryObj.x - circleObj.x
       let dy = memoryObj.y - circleObj.y
       let distance = Math.sqrt( dx * dx + dy * dy)
-
-      if (distance < memoryObj.radius + circleObj.radius) {
-        return true
-      }
-      return false
+      return distance < memoryObj.radius + circleObj.radius
     }
+
     const collidingWithArc = function(memoryObj, arcObj, circleObj) {
       const dx = memoryObj.x - circleObj.x
       const dy = memoryObj.y - circleObj.y
@@ -189,14 +202,33 @@ kontra.assets.load('player.png', 'cloud.png')
       if (collidingCircles(memoryObj, arcObj) && angle > arcStartAngle && angle < (arcStartAngle + arcObj.angleLength)) {
         pointKeeper.points += 1
         memoryObj.ttl = 0
-        canvasDetails.lightness += 5
-        canvas.style.backgroundColor = `hsl(0, 0%, ${canvasDetails.lightness}%`
+        canvas.lightness += 5
+        kontra.canvas.style.backgroundColor = `hsl(0, 0%, ${canvas.lightness}%`
         gameState.level += 1
         gameState.islevelTransition = true
       } else if (collidingCircles(memoryObj, circleObj)) {
-        //console.log('missed')
+        pointKeeper.points -= 1
+
+        if (pointKeeper.points < 0) {
+          lifeKeeper.livesLeft -= 1
+          pointKeeper.points = 0
+        }
+        memoryObj.ttl = 0
       }
 
+    }
+
+    const checkPoints = function(memoryObj) {
+      if ( pointKeeper.points < 0 || lifeKeeper.livesLeft === 0 ) {
+        console.log('you died x_x')
+        //memoryObj.ttl = 0
+        gameState.isPaused = true;
+        loop.stop();
+      } else {
+        /*
+        do nothing, keep the game running
+        */
+      }
     }
 
     let loop = kontra.gameLoop({
@@ -210,6 +242,7 @@ kontra.assets.load('player.png', 'cloud.png')
           circle.update()
           arc.update()
           pointKeeper.update()
+          lifeKeeper.update()
         } else {
           scene.update()
         }
@@ -220,6 +253,7 @@ kontra.assets.load('player.png', 'cloud.png')
           circle.render()
           arc.render()
           pointKeeper.render()
+          lifeKeeper.render()
         } else {
           scene.render()
         }
@@ -237,7 +271,9 @@ kontra.assets.load('player.png', 'cloud.png')
       }
     });
     kontra.keys.bind('space', () => {
-      gameState.islevelTransition = !gameState.islevelTransition
+      if (gameState.islevelTransition) {
+        gameState.islevelTransition = false
+      }
     });
 
     loop.start()
