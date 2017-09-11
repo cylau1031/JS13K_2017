@@ -14,12 +14,6 @@ const scenes = {
 }
 
 
-function getDirection(position, center) {
-  var scale = 0.004; //scales it down so that memories move incremently instead of jumping to the center
-  var random = Math.random() + .25; //randomizes the scaling for mixed speeds
-  var direction =  { x: (center.x-position.x)*scale*random, y: (center.y - position.y)*scale*random}
-  return direction;
-}
 
 
 kontra.init()
@@ -180,6 +174,22 @@ kontra.assets.load('player.png', 'cloud.png')
       create: kontra.sprite,
       maxSize: canvas.MAX_NUM_MEMORIES
     });
+
+
+    function getDirection(position, center) {
+
+      var levelUp; 
+      if(gameState.level < 5) {
+        levelUp = (gameState.level+1)/2; 
+      } else {
+        levelUp = (gameState.level)/4; 
+      }
+      
+      var scale = 0.004; //scales it down so that memories move incremently instead of jumping to the center
+      //var random = Math.random() + .25; //randomizes the scaling for mixed speeds
+      var direction =  { x: (center.x-position.x)*scale*levelUp, y: (center.y - position.y)*scale*levelUp}
+      return direction;
+    }
 
     function spawnMemories() {
       var MAX_HEIGHT = kontra.canvas.height-20;
