@@ -55,10 +55,10 @@ kontra.assets.load('player.png', 'cloud.png')
       angleLength: (Math.PI * 2)/15,
       update: function() {
         if (kontra.keys.pressed('left')) {
-          this.startAngle += (Math.PI / 180) * 3
+          this.startAngle += (Math.PI / 180) * 3.5
         }
         if (kontra.keys.pressed('right')) {
-          this.startAngle -= (Math.PI / 180) * 3
+          this.startAngle -= (Math.PI / 180) * 3.5
         }
       },
       render: function() {
