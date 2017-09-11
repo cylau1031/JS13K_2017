@@ -118,9 +118,13 @@ kontra.assets.load('player.png', 'cloud.png')
           titleSceneDraw(this.context, scenes.sceneText[0])
           spaceDraw(this.context, 'continue')
         } else if (gameState.level === 'lose') {
+          canvas.lightness = 0
+          kontra.canvas.style.backgroundColor = `hsl(0, 0%, ${canvas.lightness}%`
           titleSceneDraw(this.context, scenes.sceneText.lose)
           spaceDraw(this.context, 'restart')
         } else if (gameState.level === 'win'){
+          canvas.lightness = 100
+          kontra.canvas.style.backgroundColor = `hsl(0, 0%, ${canvas.lightness}%`
           titleSceneDraw(this.context, scenes.sceneText.win)
           spaceDraw(this.context, 'play again')
         } else {
@@ -229,12 +233,16 @@ kontra.assets.load('player.png', 'cloud.png')
           update: function() {
             if (collidingWithArc(this)) {
               this.ttl = 0
-              canvas.lightness += 4
+              canvas.lightness += 3
               kontra.canvas.style.backgroundColor = `hsl(0, 0%, ${canvas.lightness}%`
               pointKeeper.points += 1
               checkPoints()
             } else if (collidingCircles(this, circle)) {
               pointKeeper.points -= 1
+              if (canvas.lightness >= 3) {
+                canvas.lightness -= 3
+                kontra.canvas.style.backgroundColor = `hsl(0, 0%, ${canvas.lightness}%`
+              }
               if (pointKeeper.points < 0) {
                 lifeKeeper.livesLeft -= 1
                 pointKeeper.points = 0
