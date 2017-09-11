@@ -42,6 +42,11 @@ kontra.assets.load('player.png', 'cloud.png')
         this.context.beginPath()
         this.context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI)
         this.context.fill()
+        if (gameState.level === 1) {
+          this.context.font = 'italic 15px Arial'
+          this.context.fillStyle = 'grey'
+          this.context.fillText(`Left and right keys to move paddle and collect your consciousness.`, 200, 575)
+        }
       }
     })
 
@@ -55,10 +60,10 @@ kontra.assets.load('player.png', 'cloud.png')
       angleLength: (Math.PI * 2)/15,
       update: function() {
         if (kontra.keys.pressed('left')) {
-          this.startAngle += (Math.PI / 180) * 3.5
+          this.startAngle += (Math.PI / 180) * 4
         }
         if (kontra.keys.pressed('right')) {
-          this.startAngle -= (Math.PI / 180) * 3.5
+          this.startAngle -= (Math.PI / 180) * 4
         }
       },
       render: function() {
@@ -151,7 +156,7 @@ kontra.assets.load('player.png', 'cloud.png')
         gameState.level = 'lose'
         //gameState.isPaused = true;
         //loop.stop();
-      } else if (pointKeeper.points >= 2) {
+      } else if (pointKeeper.points >= 5) {
         //changing winning points to 5-10
         pointKeeper.points = 0
         if (gameState.level === 5) {
@@ -178,13 +183,13 @@ kontra.assets.load('player.png', 'cloud.png')
 
     function getDirection(position, center) {
 
-      var levelUp; 
+      var levelUp;
       if(gameState.level < 5) {
-        levelUp = (gameState.level+1)/2; 
+        levelUp = (gameState.level+1)/2;
       } else {
-        levelUp = (gameState.level)/4; 
+        levelUp = (gameState.level)/4;
       }
-      
+
       var scale = 0.004; //scales it down so that memories move incremently instead of jumping to the center
       //var random = Math.random() + .25; //randomizes the scaling for mixed speeds
       var direction =  { x: (center.x-position.x)*scale*levelUp, y: (center.y - position.y)*scale*levelUp}
@@ -224,7 +229,7 @@ kontra.assets.load('player.png', 'cloud.png')
           update: function() {
             if (collidingWithArc(this)) {
               this.ttl = 0
-              canvas.lightness += 5
+              canvas.lightness += 4
               kontra.canvas.style.backgroundColor = `hsl(0, 0%, ${canvas.lightness}%`
               pointKeeper.points += 1
               checkPoints()
