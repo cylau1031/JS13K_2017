@@ -1,5 +1,4 @@
 /* global kontra */
-
 const scenes = {
   sceneText: {
     0: 'CONSCIOUS',
@@ -14,8 +13,6 @@ const scenes = {
 }
 
 
-
-
 kontra.init()
 kontra.assets.imagePath = 'assets/images/'
 kontra.assets.load('player.png', 'cloud.png')
@@ -28,8 +25,7 @@ kontra.assets.load('player.png', 'cloud.png')
     }
 
     const canvas = {
-      lightness: 0,
-      MAX_NUM_MEMORIES: 5,
+      lightness: 0
     }
 
     let circle = kontra.sprite({
@@ -43,9 +39,10 @@ kontra.assets.load('player.png', 'cloud.png')
         this.context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI)
         this.context.fill()
         if (gameState.level === 1) {
+          this.context.beginPath()
           this.context.font = 'italic 15px Arial'
           this.context.fillStyle = 'grey'
-          this.context.fillText(`Left and right keys to move paddle and collect your consciousness.`, 200, 575)
+          this.context.fillText(`Left (clockwise) & right (counter-clockwise) keys to move paddle and collect your consciousness.`, 100, 575)
         }
       }
     })
@@ -59,10 +56,10 @@ kontra.assets.load('player.png', 'cloud.png')
       startAngle: (Math.PI * 2),
       angleLength: (Math.PI * 2)/15,
       update: function() {
-        if (kontra.keys.pressed('left')) {
+        if (kontra.keys.pressed('left') || kontra.keys.pressed('a')) {
           this.startAngle += (Math.PI / 180) * 4
         }
-        if (kontra.keys.pressed('right')) {
+        if (kontra.keys.pressed('right') || kontra.keys.pressed('d')) {
           this.startAngle -= (Math.PI / 180) * 4
         }
       },
@@ -106,6 +103,18 @@ kontra.assets.load('player.png', 'cloud.png')
       ctx.fillStyle = 'grey'
       ctx.fillText(text, 250, 300)
     }
+    const flatlineDraw =  function(ctx) {
+      ctx.strokeStyle = 'white'
+      ctx.lineWidth = 2
+      ctx.moveTo(0, 300)
+      ctx.lineTo(70, 300)
+      ctx.lineTo(100, 200)
+      ctx.lineTo(130, 400)
+      ctx.lineTo(160, 300)
+      ctx.lineTo(800, 300)
+      ctx.stroke()
+    }
+
     let scene = kontra.sprite({
       x: 200,
       y: 200,
@@ -120,14 +129,15 @@ kontra.assets.load('player.png', 'cloud.png')
         } else if (gameState.level === 'lose') {
           canvas.lightness = 0
           kontra.canvas.style.backgroundColor = `hsl(0, 0%, ${canvas.lightness}%`
-          titleSceneDraw(this.context, scenes.sceneText.lose)
-          spaceDraw(this.context, 'restart')
+          flatlineDraw(this.context)
         } else if (gameState.level === 'win'){
           canvas.lightness = 100
           kontra.canvas.style.backgroundColor = `hsl(0, 0%, ${canvas.lightness}%`
+          document.body.style.backgroundColor = `hsl(0, 0%, ${canvas.lightness}%`
           titleSceneDraw(this.context, scenes.sceneText.win)
           spaceDraw(this.context, 'play again')
         } else {
+          kontra.canvas.style.backgroundColor = `hsl(0, 0%, 0%)`
           let textSpace = {x: this.x, y: this.y}
           for (let i = 0; i < scenes.sceneText[gameState.level].length; i++) {
             this.context.fillText(`${scenes.sceneText[gameState.level][i]}`, textSpace.x + (i * 100), textSpace.y + (i * 100))
@@ -188,8 +198,8 @@ kontra.assets.load('player.png', 'cloud.png')
     function getDirection(position, center) {
 
       var levelUp;
-      if(gameState.level < 5) {
-        levelUp = (gameState.level+1)/2;
+      if (gameState.level < 5) {
+        levelUp = (gameState.level + 1)/2;
       } else {
         levelUp = (gameState.level)/4;
       }
@@ -265,6 +275,7 @@ kontra.assets.load('player.png', 'cloud.png')
     const restartGame = function () {
       gameState.level = 0
       gameState.islevelTransition = true
+      canvas.lightness = 0
     }
 
     let loop = kontra.gameLoop({
@@ -313,7 +324,7 @@ kontra.assets.load('player.png', 'cloud.png')
         } else {
           gameState.islevelTransition = false
         }
-        if (gameState.level === 'win' || gameState.level === 'lose') {
+        if (gameState.level === 'win') {
           restartGame()
         }
       } else {
