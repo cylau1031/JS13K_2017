@@ -1,4 +1,5 @@
 /* global kontra */
+//text for scenes
 const scenes = {
   sceneText: {
     0: 'CONSCIOUS',
@@ -7,15 +8,12 @@ const scenes = {
     3: ['"condition not..."', '"...last the night?"', '"come back..."'],
     4: ['"...stabilizing"', '"we love you..."', '"can...hear us?"'],
     5: ['"See that...finger twitch!"', '"...GET THE DOCTOR!"', '"Don\'t give up..."'],
-    win: 'Welcome back',
-    lose:  'You died x_x'
+    win: 'Welcome back'
   }
 }
-
-
+//used kontra micro-framework
 kontra.init()
-kontra.assets.imagePath = 'assets/images/'
-kontra.assets.load('player.png', 'cloud.png')
+kontra.assets.load()
   .then(() => {
     let gameState = {
       isPaused: false,
@@ -168,44 +166,31 @@ kontra.assets.load('player.png', 'cloud.png')
       if (pointKeeper.points < 0 || lifeKeeper.livesLeft === 0 ) {
         gameState.islevelTransition = true
         gameState.level = 'lose'
-        //gameState.isPaused = true;
-        //loop.stop();
       } else if (pointKeeper.points >= 5) {
-        //changing winning points to 5-10
         pointKeeper.points = 0
         if (gameState.level === 5) {
           gameState.level = 'win'
         } else {
           gameState.level += 1
-          //gameState.completedLevel = true
         }
         gameState.islevelTransition = true
-      } else {
-        //keep game running
       }
     }
 
-    ///////////////////////////////////////
-    //////////////MEMORIES/////////////////
-    ///////////////////////////////////////
-
+    //memories are the blue objects representing consciousness points
     const memories = kontra.pool({
       create: kontra.sprite,
       maxSize: canvas.MAX_NUM_MEMORIES
     });
 
-
     function getDirection(position, center) {
-
       var levelUp;
-      if (gameState.level < 5) {
-        levelUp = (gameState.level + 1)/2;
+      if (gameState.level <= 5) {
+        levelUp = (gameState.level + 1) / 2;
       } else {
-        levelUp = (gameState.level)/4;
+        levelUp = (gameState.level)/ 4;
       }
-
       var scale = 0.004; //scales it down so that memories move incremently instead of jumping to the center
-      //var random = Math.random() + .25; //randomizes the scaling for mixed speeds
       var direction =  { x: (center.x-position.x)*scale*levelUp, y: (center.y - position.y)*scale*levelUp}
       return direction;
     }
@@ -214,8 +199,6 @@ kontra.assets.load('player.png', 'cloud.png')
       var MAX_HEIGHT = kontra.canvas.height-20;
       var MAX_WIDTH = kontra.canvas.width-20;
       var CANVAS_CENTER = { x: MAX_WIDTH/2, y: MAX_HEIGHT/2 };
-
-      //for(var i=0; i< canvas.MAX_NUM_MEMORIES; i++) {
       for(var i=0; i<1; i++) {
         //toggle is used to determine which side of the board the memories will appear on
         //Math.random is used to determine the toggle
@@ -243,16 +226,10 @@ kontra.assets.load('player.png', 'cloud.png')
           update: function() {
             if (collidingWithArc(this)) {
               this.ttl = 0
-              canvas.lightness += 3
-              kontra.canvas.style.backgroundColor = `hsl(0, 0%, ${canvas.lightness}%`
               pointKeeper.points += 1
               checkPoints()
             } else if (collidingCircles(this, circle)) {
               pointKeeper.points -= 1
-              if (canvas.lightness >= 3) {
-                canvas.lightness -= 3
-                kontra.canvas.style.backgroundColor = `hsl(0, 0%, ${canvas.lightness}%`
-              }
               if (pointKeeper.points < 0) {
                 lifeKeeper.livesLeft -= 1
                 pointKeeper.points = 0
@@ -276,6 +253,8 @@ kontra.assets.load('player.png', 'cloud.png')
       gameState.level = 0
       gameState.islevelTransition = true
       canvas.lightness = 0
+      pointKeeper.points = 0
+      lifeKeeper.livesLeft = 3
     }
 
     let loop = kontra.gameLoop({
@@ -317,6 +296,8 @@ kontra.assets.load('player.png', 'cloud.png')
         loop.start();
       }
     });
+
+    //keypress logic to transition levels and story scenes
     kontra.keys.bind('space', () => {
       if (gameState.islevelTransition) {
         if (gameState.level === 0) {
@@ -327,11 +308,6 @@ kontra.assets.load('player.png', 'cloud.png')
         if (gameState.level === 'win') {
           restartGame()
         }
-      } else {
-        // if (gameState.completedLevel) {
-        //   gameState.completedLevel = false
-        //   gameState.islevelTransition = true
-        // }
       }
     });
 
